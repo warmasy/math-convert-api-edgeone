@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数学计算与单位转换工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 32px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .calc-card {
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            background: #fafbfc;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .calc-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .calc-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .input-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .input-row input, .input-row select {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+        .input-row input:focus, .input-row select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-green {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+        .btn-green:hover {
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+        .result-box {
+            margin-top: 12px;
+            padding: 14px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            word-break: break-all;
+        }
+        .result-box.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+        .result-box.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        .result-box.empty {
+            background: #f5f5f5;
+            color: #999;
+            border: 1px dashed #ccc;
+        }
+        .formula {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+        .unit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .unit-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+        .unit-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .unit-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .tag.get { background: #e8f5e9; color: #2e7d32; }
+        .tag.post { background: #e3f2fd; color: #1565c0; }
+        @media (max-width: 600px) {
+            .input-row { flex-direction: column; }
+            .input-row input, .input-row select { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 数学计算与单位转换</h1>
+        <p class="subtitle">纯前端版本，无需服务器，所有计算在浏览器中完成</p>
+
+        <!-- 数学计算 -->
+        <div class="section">
+            <h2>🔢 数学计算</h2>
+
+            <div class="calc-card">
+                <div class="calc-title">➕ 加法 <span class="tag get">GET</span></div>
+                <div class="formula">公式：a + b = 结果</div>
+                <div class="input-row">
+                    <input type="number" id="add_a" placeholder="a" value="10">
+                    <span style="font-size:20px;color:#666;">+</span>
+                    <input type="number" id="add_b" placeholder="b" value="20">
+                    <button class="btn" onclick="doMath('add')">计算</button>
+                </div>
+                <div class="result-box empty" id="res_add">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">➖ 减法 <span class="tag get">GET</span></div>
+                <div class="formula">公式：a - b = 结果</div>
+                <div class="input-row">
+                    <input type="number" id="sub_a" placeholder="a" value="50">
+                    <span style="font-size:20px;color:#666;">−</span>
+                    <input type="number" id="sub_b" placeholder="b" value="20">
+                    <button class="btn" onclick="doMath('subtract')">计算</button>
+                </div>
+                <div class="result-box empty" id="res_subtract">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">✖️ 乘法 <span class="tag get">GET</span></div>
+                <div class="formula">公式：a × b = 结果</div>
+                <div class="input-row">
+                    <input type="number" id="mul_a" placeholder="a" value="5">
+                    <span style="font-size:20px;color:#666;">×</span>
+                    <input type="number" id="mul_b" placeholder="b" value="6">
+                    <button class="btn" onclick="doMath('multiply')">计算</button>
+                </div>
+                <div class="result-box empty" id="res_multiply">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">➗ 除法 <span class="tag get">GET</span></div>
+                <div class="formula">公式：a ÷ b = 结果（b 不能为 0）</div>
+                <div class="input-row">
+                    <input type="number" id="div_a" placeholder="a" value="100">
+                    <span style="font-size:20px;color:#666;">÷</span>
+                    <input type="number" id="div_b" placeholder="b" value="4">
+                    <button class="btn" onclick="doMath('divide')">计算</button>
+                </div>
+                <div class="result-box empty" id="res_divide">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">🔢 幂运算 <span class="tag get">GET</span></div>
+                <div class="formula">公式：a^b = 结果</div>
+                <div class="input-row">
+                    <input type="number" id="pow_a" placeholder="底数 a" value="2">
+                    <span style="font-size:20px;color:#666;">^</span>
+                    <input type="number" id="pow_b" placeholder="指数 b" value="10">
+                    <button class="btn" onclick="doMath('power')">计算</button>
+                </div>
+                <div class="result-box empty" id="res_power">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">√ 开平方 <span class="tag get">GET</span></div>
+                <div class="formula">公式：√a = 结果（a ≥ 0）</div>
+                <div class="input-row">
+                    <input type="number" id="sqrt_a" placeholder="a" value="16">
+                    <button class="btn" onclick="doMath('sqrt')">计算</button>
+                </div>
+                <div class="result-box empty" id="res_sqrt">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">📊 百分比 <span class="tag get">GET</span></div>
+                <div class="formula">公式：a 的 b% = 结果</div>
+                <div class="input-row">
+                    <input type="number" id="pct_a" placeholder="基数 a" value="200">
+                    <span style="font-size:20px;color:#666;">的</span>
+                    <input type="number" id="pct_b" placeholder="百分比 b" value="15">
+                    <span style="font-size:20px;color:#666;">%</span>
+                    <button class="btn" onclick="doMath('percentage')">计算</button>
+                </div>
+                <div class="result-box empty" id="res_percentage">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">🔵 圆面积 <span class="tag get">GET</span></div>
+                <div class="formula">公式：S = π × r²</div>
+                <div class="input-row">
+                    <input type="number" id="circle_r" placeholder="半径 r" value="5">
+                    <button class="btn" onclick="doMath('circleArea')">计算</button>
+                </div>
+                <div class="result-box empty" id="res_circleArea">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">❗ 阶乘 <span class="tag get">GET</span></div>
+                <div class="formula">公式：n! = n × (n-1) × ... × 1</div>
+                <div class="input-row">
+                    <input type="number" id="fac_n" placeholder="n (非负整数)" value="5">
+                    <button class="btn" onclick="doFactorial()">计算</button>
+                </div>
+                <div class="result-box empty" id="res_factorial">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">📈 斐波那契数列 <span class="tag get">GET</span></div>
+                <div class="formula">返回前 n 项：[0, 1, 1, 2, 3, 5, 8...]</div>
+                <div class="input-row">
+                    <input type="number" id="fib_n" placeholder="n (正整数)" value="10">
+                    <button class="btn" onclick="doFibonacci()">计算</button>
+                </div>
+                <div class="result-box empty" id="res_fibonacci">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">➕ 批量求和 <span class="tag get">GET</span></div>
+                <div class="formula">输入逗号分隔的数字，如：1,2,3,4,5</div>
+                <div class="input-row">
+                    <input type="text" id="sum_nums" placeholder="1,2,3,4,5" value="1,2,3,4,5" style="flex:3;">
+                    <button class="btn" onclick="doSum()">计算</button>
+                </div>
+                <div class="result-box empty" id="res_sum">点击计算查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">🔍 判断质数 <span class="tag get">GET</span></div>
+                <div class="formula">判断 n 是否为质数（只能被 1 和自身整除）</div>
+                <div class="input-row">
+                    <input type="number" id="prime_n" placeholder="n (正整数)" value="17">
+                    <button class="btn" onclick="doPrime()">判断</button>
+                </div>
+                <div class="result-box empty" id="res_prime">点击计算查看结果</div>
+            </div>
+        </div>
+
+        <!-- 单位转换 -->
+        <div class="section">
+            <h2>🔄 单位转换</h2>
+
+            <div class="calc-card">
+                <div class="calc-title">📏 长度转换 <span class="tag get">GET</span></div>
+                <div class="formula">支持：m, km, cm, mm, inch, ft</div>
+                <div class="input-row">
+                    <input type="number" id="len_val" placeholder="数值" value="1">
+                    <select id="len_from">
+                        <option value="m">米 (m)</option>
+                        <option value="km">千米 (km)</option>
+                        <option value="cm">厘米 (cm)</option>
+                        <option value="mm">毫米 (mm)</option>
+                        <option value="inch">英寸 (inch)</option>
+                        <option value="ft">英尺 (ft)</option>
+                    </select>
+                    <span style="font-size:20px;color:#666;">→</span>
+                    <select id="len_to">
+                        <option value="cm">厘米 (cm)</option>
+                        <option value="m">米 (m)</option>
+                        <option value="km">千米 (km)</option>
+                        <option value="mm">毫米 (mm)</option>
+                        <option value="inch">英寸 (inch)</option>
+                        <option value="ft">英尺 (ft)</option>
+                    </select>
+                    <button class="btn btn-green" onclick="doConvert('length')">转换</button>
+                </div>
+                <div class="result-box empty" id="res_length">点击转换查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">⚖️ 重量转换 <span class="tag get">GET</span></div>
+                <div class="formula">支持：kg, g, t, lb, oz</div>
+                <div class="input-row">
+                    <input type="number" id="wgt_val" placeholder="数值" value="1">
+                    <select id="wgt_from">
+                        <option value="kg">千克 (kg)</option>
+                        <option value="g">克 (g)</option>
+                        <option value="t">吨 (t)</option>
+                        <option value="lb">磅 (lb)</option>
+                        <option value="oz">盎司 (oz)</option>
+                    </select>
+                    <span style="font-size:20px;color:#666;">→</span>
+                    <select id="wgt_to">
+                        <option value="lb">磅 (lb)</option>
+                        <option value="kg">千克 (kg)</option>
+                        <option value="g">克 (g)</option>
+                        <option value="t">吨 (t)</option>
+                        <option value="oz">盎司 (oz)</option>
+                    </select>
+                    <button class="btn btn-green" onclick="doConvert('weight')">转换</button>
+                </div>
+                <div class="result-box empty" id="res_weight">点击转换查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">🌡️ 温度转换 <span class="tag get">GET</span></div>
+                <div class="formula">支持：摄氏度(C), 华氏度(F), 开尔文(K)</div>
+                <div class="input-row">
+                    <input type="number" id="temp_val" placeholder="数值" value="100">
+                    <select id="temp_from">
+                        <option value="C">摄氏度 (°C)</option>
+                        <option value="F">华氏度 (°F)</option>
+                        <option value="K">开尔文 (K)</option>
+                    </select>
+                    <span style="font-size:20px;color:#666;">→</span>
+                    <select id="temp_to">
+                        <option value="F">华氏度 (°F)</option>
+                        <option value="C">摄氏度 (°C)</option>
+                        <option value="K">开尔文 (K)</option>
+                    </select>
+                    <button class="btn btn-green" onclick="doConvert('temperature')">转换</button>
+                </div>
+                <div class="result-box empty" id="res_temperature">点击转换查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">💨 速度转换 <span class="tag get">GET</span></div>
+                <div class="formula">支持：m/s, km/h, mph</div>
+                <div class="input-row">
+                    <input type="number" id="spd_val" placeholder="数值" value="100">
+                    <select id="spd_from">
+                        <option value="km/h">千米/时 (km/h)</option>
+                        <option value="m/s">米/秒 (m/s)</option>
+                        <option value="mph">英里/时 (mph)</option>
+                    </select>
+                    <span style="font-size:20px;color:#666;">→</span>
+                    <select id="spd_to">
+                        <option value="m/s">米/秒 (m/s)</option>
+                        <option value="km/h">千米/时 (km/h)</option>
+                        <option value="mph">英里/时 (mph)</option>
+                    </select>
+                    <button class="btn btn-green" onclick="doConvert('speed')">转换</button>
+                </div>
+                <div class="result-box empty" id="res_speed">点击转换查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">💪 压力转换 <span class="tag get">GET</span></div>
+                <div class="formula">支持：Pa, kPa, MPa, bar, psi</div>
+                <div class="input-row">
+                    <input type="number" id="pre_val" placeholder="数值" value="1">
+                    <select id="pre_from">
+                        <option value="MPa">兆帕 (MPa)</option>
+                        <option value="Pa">帕 (Pa)</option>
+                        <option value="kPa">千帕 (kPa)</option>
+                        <option value="bar">巴 (bar)</option>
+                        <option value="psi">psi</option>
+                    </select>
+                    <span style="font-size:20px;color:#666;">→</span>
+                    <select id="pre_to">
+                        <option value="bar">巴 (bar)</option>
+                        <option value="Pa">帕 (Pa)</option>
+                        <option value="kPa">千帕 (kPa)</option>
+                        <option value="MPa">兆帕 (MPa)</option>
+                        <option value="psi">psi</option>
+                    </select>
+                    <button class="btn btn-green" onclick="doConvert('pressure')">转换</button>
+                </div>
+                <div class="result-box empty" id="res_pressure">点击转换查看结果</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="calc-title">📊 长度全单位转换 <span class="tag get">GET</span></div>
+                <div class="formula">输入一个值，同时显示所有单位的结果</div>
+                <div class="input-row">
+                    <input type="number" id="all_val" placeholder="数值" value="1">
+                    <select id="all_from">
+                        <option value="m">米 (m)</option>
+                        <option value="km">千米 (km)</option>
+                        <option value="cm">厘米 (cm)</option>
+                        <option value="mm">毫米 (mm)</option>
+                        <option value="inch">英寸 (inch)</option>
+                        <option value="ft">英尺 (ft)</option>
+                    </select>
+                    <button class="btn btn-green" onclick="doConvertAll()">全部转换</button>
+                </div>
+                <div id="res_all" style="margin-top:12px;"></div>
+            </div>
+        </div>
+
+        <div style="text-align:center;color:rgba(255,255,255,0.7);padding:20px;font-size:14px;">
+            纯前端实现 | 无需服务器 | 所有计算在本地完成
+        </div>
+    </div>
+
+    <script>
+        // ========== 数学计算 ==========
+        function doMath(op) {
+            let a, b, r, result, text;
+            const el = document.getElementById('res_' + op);
+            el.className = 'result-box empty';
+
+            try {
+                switch(op) {
+                    case 'add':
+                        a = parseFloat(document.getElementById('add_a').value);
+                        b = parseFloat(document.getElementById('add_b').value);
+                        if (isNaN(a) || isNaN(b)) throw new Error('请输入有效数字');
+                        result = a + b;
+                        text = `${a} + ${b} = ${result}`;
+                        break;
+                    case 'subtract':
+                        a = parseFloat(document.getElementById('sub_a').value);
+                        b = parseFloat(document.getElementById('sub_b').value);
+                        if (isNaN(a) || isNaN(b)) throw new Error('请输入有效数字');
+                        result = a - b;
+                        text = `${a} - ${b} = ${result}`;
+                        break;
+                    case 'multiply':
+                        a = parseFloat(document.getElementById('mul_a').value);
+                        b = parseFloat(document.getElementById('mul_b').value);
+                        if (isNaN(a) || isNaN(b)) throw new Error('请输入有效数字');
+                        result = a * b;
+                        text = `${a} × ${b} = ${result}`;
+                        break;
+                    case 'divide':
+                        a = parseFloat(document.getElementById('div_a').value);
+                        b = parseFloat(document.getElementById('div_b').value);
+                        if (isNaN(a) || isNaN(b)) throw new Error('请输入有效数字');
+                        if (b === 0) throw new Error('除数不能为 0');
+                        result = a / b;
+                        text = `${a} ÷ ${b} = ${result}`;
+                        break;
+                    case 'power':
+                        a = parseFloat(document.getElementById('pow_a').value);
+                        b = parseFloat(document.getElementById('pow_b').value);
+                        if (isNaN(a) || isNaN(b)) throw new Error('请输入有效数字');
+                        result = Math.pow(a, b);
+                        text = `${a}^${b} = ${result}`;
+                        break;
+                    case 'sqrt':
+                        a = parseFloat(document.getElementById('sqrt_a').value);
+                        if (isNaN(a)) throw new Error('请输入有效数字');
+                        if (a < 0) throw new Error('负数不能开平方');
+                        result = Math.sqrt(a);
+                        text = `√${a} = ${result}`;
+                        break;
+                    case 'percentage':
+                        a = parseFloat(document.getElementById('pct_a').value);
+                        b = parseFloat(document.getElementById('pct_b').value);
+                        if (isNaN(a) || isNaN(b)) throw new Error('请输入有效数字');
+                        result = a * (b / 100);
+                        text = `${a} 的 ${b}% = ${result}`;
+                        break;
+                    case 'circleArea':
+                        r = parseFloat(document.getElementById('circle_r').value);
+                        if (isNaN(r)) throw new Error('请输入有效数字');
+                        if (r < 0) throw new Error('半径不能为负数');
+                        result = Math.PI * r * r;
+                        text = `圆面积 π × ${r}² = ${result.toFixed(6)}`;
+                        break;
+                }
+                el.className = 'result-box success';
+                el.textContent = text;
+            } catch (e) {
+                el.className = 'result-box error';
+                el.textContent = '错误：' + e.message;
+            }
+        }
+
+        function doFactorial() {
+            const el = document.getElementById('res_factorial');
+            try {
+                const n = parseInt(document.getElementById('fac_n').value);
+                if (isNaN(n) || n < 0) throw new Error('n 必须是非负整数');
+                if (n > 170) throw new Error('n 太大，会超出数字范围');
+                let result = 1;
+                for (let i = 2; i <= n; i++) result *= i;
+                el.className = 'result-box success';
+                el.textContent = `${n}! = ${result}`;
+            } catch (e) {
+                el.className = 'result-box error';
+                el.textContent = '错误：' + e.message;
+            }
+        }
+
+        function doFibonacci() {
+            const el = document.getElementById('res_fibonacci');
+            try {
+                const n = parseInt(document.getElementById('fib_n').value);
+                if (isNaN(n) || n < 1) throw new Error('n 必须是正整数');
+                if (n > 100) throw new Error('n 太大，请使用小于 100 的数字');
+                const seq = [];
+                let a = 0, b = 1;
+                for (let i = 0; i < n; i++) {
+                    seq.push(a);
+                    const temp = a + b;
+                    a = b;
+                    b = temp;
+                }
+                el.className = 'result-box success';
+                el.textContent = `前 ${n} 项：${seq.join(', ')}`;
+            } catch (e) {
+                el.className = 'result-box error';
+                el.textContent = '错误：' + e.message;
+            }
+        }
+
+        function doSum() {
+            const el = document.getElementById('res_sum');
+            try {
+                const str = document.getElementById('sum_nums').value;
+                const nums = str.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+                if (nums.length === 0) throw new Error('请输入有效的数字，用逗号分隔');
+                const result = nums.reduce((acc, c) => acc + c, 0);
+                el.className = 'result-box success';
+                el.textContent = `[${nums.join(' + ')}] = ${result}`;
+            } catch (e) {
+                el.className = 'result-box error';
+                el.textContent = '错误：' + e.message;
+            }
+        }
+
+        function doPrime() {
+            const el = document.getElementById('res_prime');
+            try {
+                const n = parseInt(document.getElementById('prime_n').value);
+                if (isNaN(n) || n < 1) throw new Error('n 必须是正整数');
+                let isPrime = true;
+                if (n === 1) isPrime = false;
+                else if (n === 2) isPrime = true;
+                else if (n % 2 === 0) isPrime = false;
+                else {
+                    for (let i = 3; i <= Math.sqrt(n); i += 2) {
+                        if (n % i === 0) { isPrime = false; break; }
+                    }
+                }
+                el.className = 'result-box success';
+                el.textContent = isPrime ? `${n} 是质数 ✅` : `${n} 不是质数 ❌`;
+            } catch (e) {
+                el.className = 'result-box error';
+                el.textContent = '错误：' + e.message;
+            }
+        }
+
+        // ========== 单位转换 ==========
+        const toMeter = { m: 1, km: 1000, cm: 0.01, mm: 0.001, inch: 0.0254, ft: 0.3048 };
+        const toKg = { kg: 1, g: 0.001, t: 1000, lb: 0.453592, oz: 0.0283495 };
+        const toMps = { 'm/s': 1, 'km/h': 0.277778, 'mph': 0.44704 };
+        const toPa = { Pa: 1, kPa: 1000, MPa: 1000000, bar: 100000, psi: 6894.76 };
+
+        function doConvert(type) {
+            const valId = type === 'length' ? 'len_val' : type === 'weight' ? 'wgt_val' : type === 'temperature' ? 'temp_val' : type === 'speed' ? 'spd_val' : 'pre_val';
+            const fromId = type === 'length' ? 'len_from' : type === 'weight' ? 'wgt_from' : type === 'temperature' ? 'temp_from' : type === 'speed' ? 'spd_from' : 'pre_from';
+            const toId = type === 'length' ? 'len_to' : type === 'weight' ? 'wgt_to' : type === 'temperature' ? 'temp_to' : type === 'speed' ? 'spd_to' : 'pre_to';
+            const el = document.getElementById('res_' + type);
+
+            try {
+                const value = parseFloat(document.getElementById(valId).value);
+                const from = document.getElementById(fromId).value;
+                const to = document.getElementById(toId).value;
+                if (isNaN(value)) throw new Error('请输入有效数字');
+
+                let result;
+                if (type === 'length') {
+                    if (!toMeter[from] || !toMeter[to]) throw new Error('不支持的长度单位');
+                    result = (value * toMeter[from]) / toMeter[to];
+                } else if (type === 'weight') {
+                    if (!toKg[from] || !toKg[to]) throw new Error('不支持的重量单位');
+                    result = (value * toKg[from]) / toKg[to];
+                } else if (type === 'temperature') {
+                    let c;
+                    if (from === 'C') c = value;
+                    else if (from === 'F') c = (value - 32) * 5 / 9;
+                    else if (from === 'K') c = value - 273.15;
+                    else throw new Error('不支持的 from 单位');
+                    if (to === 'C') result = c;
+                    else if (to === 'F') result = c * 9 / 5 + 32;
+                    else if (to === 'K') result = c + 273.15;
+                    else throw new Error('不支持的 to 单位');
+                } else if (type === 'speed') {
+                    if (!toMps[from] || !toMps[to]) throw new Error('不支持的速度单位');
+                    result = (value * toMps[from]) / toMps[to];
+                } else if (type === 'pressure') {
+                    if (!toPa[from] || !toPa[to]) throw new Error('不支持的压力单位');
+                    result = (value * toPa[from]) / toPa[to];
+                }
+
+                el.className = 'result-box success';
+                el.textContent = `${value} ${from} = ${result.toFixed(6)} ${to}`;
+            } catch (e) {
+                el.className = 'result-box error';
+                el.textContent = '错误：' + e.message;
+            }
+        }
+
+        function doConvertAll() {
+            const el = document.getElementById('res_all');
+            try {
+                const value = parseFloat(document.getElementById('all_val').value);
+                const from = document.getElementById('all_from').value;
+                if (isNaN(value)) throw new Error('请输入有效数字');
+                if (!toMeter[from]) throw new Error('不支持的单位');
+
+                const meters = value * toMeter[from];
+                let html = '<div class="unit-grid">';
+                for (const [unit, factor] of Object.entries(toMeter)) {
+                    const converted = meters / factor;
+                    html += `<div class="unit-item"><div class="unit-label">${unit}</div><div class="unit-value">${converted.toFixed(4)}</div></div>`;
+                }
+                html += '</div>';
+                el.innerHTML = html;
+            } catch (e) {
+                el.innerHTML = '<div class="result-box error">错误：' + e.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>
